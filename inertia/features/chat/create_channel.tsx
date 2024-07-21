@@ -1,16 +1,12 @@
 import { routes } from '#utils/transmit'
+import { router } from '@inertiajs/react'
 import { CSSProperties, FormEventHandler } from 'react'
 
 const CreateChannel = () => {
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault()
     const channel = e.currentTarget.channel.value
-    fetch(routes.create(channel), {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-    })
+    router.post(routes.create(channel))
   }
   const styles: { [key: string]: CSSProperties } = {
     form: {

@@ -9,13 +9,22 @@
 
 import router from '@adonisjs/core/services/router'
 import Channel from '#models/channel'
+import { middleware } from './kernel.js'
+const SessionController = () => import('#controllers/session_controller')
 
-router.get('/', async ({ inertia }) => {
-  return inertia.render('home', { channels: () => Channel.query().preload('messages') })
-})
-router.get('/admin', async ({ inertia }) => {
-  return inertia.render('admin', { channels: () => Channel.query().preload('messages') })
-})
+router
+  .get('/', async ({ inertia }) => {
+    return inertia.render('home', { channels: () => Channel.query().preload('messages') })
+  })
+  .use(middleware.auth())
+router
+  .get('/admin', async ({ inertia }) => {
+    return inertia.render('admin', { channels: () => Channel.query().preload('messages') })
+  })
+  .use(middleware.admin())
+
+router.post('/login', [SessionController, 'login'])
+router.get('/login', [SessionController, 'show'])
 
 router
   .group(() => {
