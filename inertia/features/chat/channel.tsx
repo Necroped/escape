@@ -1,87 +1,38 @@
 import Channel from '#models/channel'
 import Message from '#models/message'
-import { CSSProperties, FormEventHandler, useEffect, useRef, useState } from 'react'
+import { FormEventHandler, useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import useTransmit from '~/hooks/use_transmit'
 import { routes } from '#utils/transmit'
+import styles from './css/channel.module.css'
+import ChatMessage from './message'
+import { useAuth } from '~/context/auth_context'
 
 const ChatChannel = ({
   channel,
+  isNotif,
+  onNotif,
   isOpen,
   onOpen,
-  author,
 }: {
   channel: Channel
+  isNotif: boolean
+  onNotif: () => void
   isOpen: boolean
   onOpen: () => void
-  author: string
 }) => {
   const [messages, setMessages] = useState<Message[]>(channel.messages)
-  const [isNotif, setIsNotif] = useState(false)
-  const isNew = isNotif && !isOpen
+  const user = useAuth()
   const endRef = useRef<HTMLDivElement>(null)
   useTransmit(routes.message(channel.name), (newMessage: Message) => {
-    setIsNotif(true)
     setMessages((_m) => [..._m, newMessage])
+    onNotif()
   })
 
   useEffect(() => {
-    if (isOpen) {
-      endRef.current?.lastElementChild?.scrollIntoView({ behavior: 'smooth' })
+    if (isOpen && endRef.current) {
+      endRef.current.lastElementChild?.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [messages, isOpen])
-
-  const styles: { [key: string]: CSSProperties } = {
-    container: {
-      width: '400px',
-      border: '1px solid black',
-      padding: '10px',
-      display: 'flex',
-      flexDirection: 'column',
-      height: 'auto',
-    },
-    chatWindow: {
-      flexGrow: 1,
-      border: '1px solid black',
-      padding: '5px',
-      marginBottom: '10px',
-      overflowY: 'scroll',
-      height: '300px',
-    },
-    messages: {
-      display: 'flex',
-      flexDirection: 'column',
-      height: '80vh',
-    },
-    message_author: {
-      fontWeight: 'bold',
-      marginBottom: '5px',
-    },
-    message_content: {
-      backgroundColor: '#e1f5fe',
-      wordWrap: 'break-word',
-      borderRadius: '5px',
-      padding: '10px',
-      marginBottom: '5px',
-    },
-    message_time: {
-      textAlign: 'right',
-      fontSize: '0.8em',
-      color: '#888',
-    },
-    form: {
-      display: 'flex',
-    },
-    input: {
-      flexGrow: 1,
-      border: '1px solid black',
-      padding: '5px',
-    },
-    button: {
-      border: '1px solid black',
-      backgroundColor: 'white',
-      cursor: 'pointer',
-    },
-  }
+  }, [isOpen])
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault()
@@ -90,60 +41,50 @@ const ChatChannel = ({
         'Content-Type': 'application/json',
       },
       method: 'POST',
-      body: JSON.stringify({ message: e.currentTarget.message.value, author }),
+      body: JSON.stringify({ message: e.currentTarget.message.value }),
     })
     e.currentTarget.reset()
   }
 
-  const handleClick = () => {
-    onOpen()
-    setIsNotif(false)
-  }
   return (
-    <div style={styles.container}>
+    <div className={styles.container}>
       <h1
-        onClick={handleClick}
-        style={{ cursor: isOpen ? 'initial' : 'pointer', color: isNew ? 'red' : 'initial' }}
+        onClick={!isOpen ? onOpen : undefined}
+        style={{
+          cursor: isOpen ? 'initial' : 'pointer',
+          color: isNotif && !isOpen ? 'red' : 'initial',
+        }}
       >
         Chat de {channel.name}
       </h1>
       {isOpen && (
         <>
-          <div style={styles.chatWindow}>
-            <div style={styles.messages} ref={endRef}>
-              {messages?.map((msg, index) => {
-                const isFirstMessageOfUser =
-                  index === 0 || messages[index - 1]?.author !== msg.author
-                const isLastMessageOfUser =
-                  index === messages.length - 1 || messages[index + 1]?.author !== msg.author
-
-                return (
-                  <div style={styles.message} key={index}>
-                    {isFirstMessageOfUser && <div style={styles.message_author}>{msg.author}</div>}
-                    <div style={styles.message_content}>{msg.content}</div>
-                    {isLastMessageOfUser && (
-                      <div style={styles.message_time}>
-                        {new Date(msg.createdAt.toString()).toLocaleTimeString('fr-FR', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: undefined,
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+          <div className={styles.chatWindow}>
+            <div className={styles.messages} ref={endRef}>
+              {messages?.map((msg, index) => (
+                <ChatMessage
+                  message={msg}
+                  key={index}
+                  isFirst={index === 0 || messages[index - 1]?.author !== msg.author}
+                  isLast={
+                    index === messages.length - 1 || messages[index + 1]?.author !== msg.author
+                  }
+                  isMe={
+                    msg.author === user?.username || (user.isAdmin && msg.author === channel.name)
+                  }
+                />
+              ))}
             </div>
           </div>
-          <form onSubmit={handleSubmit} style={styles.form}>
+          <form onSubmit={handleSubmit} className={styles.form}>
             <input
               type="text"
-              style={styles.input}
+              className={styles.input}
               name="message"
               placeholder="Tapez votre message..."
               required
             />
-            <button type="submit" style={styles.button}>
+            <button type="submit" className={styles.button}>
               Envoyer
             </button>
           </form>

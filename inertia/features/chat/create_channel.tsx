@@ -1,39 +1,23 @@
-import { routes } from '#utils/transmit'
 import { router } from '@inertiajs/react'
-import { CSSProperties, FormEventHandler } from 'react'
+import { FormEventHandler } from 'react'
+import styles from './css/createchannel.module.css'
 
 const CreateChannel = () => {
   const handleSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault()
-    const channel = e.currentTarget.channel.value
-    router.post(routes.create(channel))
-  }
-  const styles: { [key: string]: CSSProperties } = {
-    form: {
-      display: 'flex',
-    },
-    input: {
-      flexGrow: 1,
-      border: '1px solid black',
-      padding: '5px',
-    },
-    button: {
-      border: '1px solid black',
-      backgroundColor: 'white',
-      cursor: 'pointer',
-    },
+    router.post(`/chat/${e.currentTarget.channel.value}/create`, {}, { preserveState: true })
   }
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
+    <form onSubmit={handleSubmit} className={styles.form}>
       <input
         type="text"
-        style={styles.input}
+        className={styles.input}
         name="channel"
         placeholder="Créer un nouveau channel"
         required
       />
-      <button type="submit" style={styles.button}>
+      <button type="submit" className={styles.button}>
         Envoyer
       </button>
     </form>

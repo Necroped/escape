@@ -6,7 +6,7 @@ const transmit = new Transmit({
   baseUrl: window.location.origin,
 })
 
-const useTransmit = (channel: string, handleMessage: (message: any) => void) => {
+const useTransmit = (channel: string, handleMessage: (_any: any) => void) => {
   const [isConnected, setIsConnected] = useState(false)
 
   useEffect(() => {

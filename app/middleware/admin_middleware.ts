@@ -11,10 +11,10 @@ import type { NextFn } from '@adonisjs/core/types/http'
 export default class AdminMiddleware {
   redirectTo = '/'
 
-  async handle(ctx: HttpContext, next: NextFn) {
-    await ctx.auth.check()
-    if (!ctx.auth.user?.isAdmin) {
-      ctx.response.redirect(this.redirectTo, true)
+  async handle({ auth, response, inertia }: HttpContext, next: NextFn) {
+    await auth.check()
+    if (!auth.user?.isAdmin) {
+      response.redirect(this.redirectTo, true)
       return
     }
     await next()

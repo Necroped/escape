@@ -1,0 +1,17 @@
+.author {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.content {
+  word-wrap: break-word;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 5px;
+}
+
+.time {
+  text-align: right;
+  font-size: 0.8em;
+  color: #888;
+}
